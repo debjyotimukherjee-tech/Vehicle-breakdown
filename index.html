@@ -1,95 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vehicle Breakdown Form</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vehicle Breakdown Report</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <div class="form-container">
-    <h2>Vehicle Breakdown Form</h2>
-    <form id="breakdownForm">
-      
-      <div class="form-group">
-        <label>Timestamp</label>
-        <input type="datetime-local" id="timestamp" required/>
-      </div>
+  <main class="form-container">
+    <h1>Vehicle Breakdown Report</h1>
 
-      <div class="form-group">
-        <label>Time of Exchange</label>
-        <input type="time" id="timeExchange" required/>
-      </div>
+    <form id="reportForm">
+      <label>Representative Name <input type="text" id="repName" required /></label>
+      <label>Timestamp <input type="datetime-local" id="timestamp" required /></label>
+      <label>Time of Exchange <input type="time" id="timeExchange" required /></label>
+      <label>Rider Name <input type="text" id="riderName" /></label>
+      <label>Contact Number <input type="tel" id="contactNumber" /></label>
+      <label>Breakdown Vehicle Reg <input type="text" id="breakReg" required /></label>
+      <label>Breakdown Odometer <input type="number" id="breakOdo" /></label>
+      <label>Breakdown Odo Photo <input type="file" id="breakOdoPhoto" accept="image/*" /></label>
+      <label>Breakdown Location <input type="text" id="breakLocationText" /></label>
 
-      <div class="form-group">
-        <label>Representative Name</label>
-        <input type="text" id="repName" required/>
-      </div>
+      <div id="map" style="height:300px;"></div>
 
-      <div class="form-group">
-        <label>Rider Name</label>
-        <input type="text" id="riderName" required/>
-      </div>
+      <label>Problem Description
+        <textarea id="problem"></textarea>
+      </label>
 
-      <div class="form-group">
-        <label>Contact Number</label>
-        <input type="tel" id="contactNumber" required/>
-      </div>
+      <label>Replacement Vehicle Reg <input type="text" id="repVehicleReg" /></label>
+      <label>Replacement Odometer <input type="number" id="repVehicleOdo" /></label>
+      <label>Replacement Odo Photo <input type="file" id="repVehicleOdoPhoto" accept="image/*" /></label>
 
-      <div class="form-group">
-        <label>Breakdown Vehicle Registration Number</label>
-        <input type="text" id="breakReg" required/>
-      </div>
+      <input type="hidden" id="lat">
+      <input type="hidden" id="lng">
 
-      <div class="form-group">
-        <label>Breakdown Odometer Reading (km)</label>
-        <input type="number" id="breakOdo" min="0" required/>
-      </div>
-
-      <div class="form-group">
-        <label>Breakdown Odometer Photo</label>
-        <input type="file" id="breakOdoPhoto" accept="image/*"/>
-        <div class="preview" id="previewBreakOdo"></div>
-      </div>
-
-      <div class="form-group">
-        <label>Breakdown Location Description</label>
-        <input type="text" id="breakLocationText" placeholder="Optional description"/>
-        <div class="map-container">
-          <div id="map"></div>
-        </div>
-        <input type="hidden" id="lat"/>
-        <input type="hidden" id="lng"/>
-      </div>
-
-      <div class="form-group">
-        <label>Nature of Breakdown / Problem</label>
-        <textarea id="problem" rows="3" required></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Replacement Vehicle Registration Number</label>
-        <input type="text" id="repVehicleReg"/>
-      </div>
-
-      <div class="form-group">
-        <label>Replacement Vehicle Odometer Reading (km)</label>
-        <input type="number" id="repVehicleOdo" min="0"/>
-      </div>
-
-      <div class="form-group">
-        <label>Replacement Vehicle Odometer Photo</label>
-        <input type="file" id="repVehicleOdoPhoto" accept="image/*"/>
-        <div class="preview" id="previewRepOdo"></div>
-      </div>
-
-      <button type="submit" class="btn-submit">Submit</button>
+      <button type="submit">Submit</button>
     </form>
-  </div>
+
+    <div id="output"></div>
+  </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="Report.js"></script>
+  <script src="script.js"></script>
 </body>
-
 </html>
