@@ -1,61 +1,36 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("breakdownForm");
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyN2IH4kNc_5gicFZIrEucall9FfQ6WsZYYJ-NoS2sur_fW1bAAmjwzItOP7V-HwWpstw/exec"; // Replace with your Apps Script URL
+  const form = document.getElementById("reportForm");
+  const output = document.getElementById("output");
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySWQ7Cnkfkm_JzV_zrevKLMh3pTduSPZdrClLzAwroNjpzb1BxtcQnUkPZv34IWs2b_w/exec"; // 🔹 Replace with your Web App URL
 
-  const previewImage = (inputEl, previewId) => {
-    const container = document.getElementById(previewId);
-    container.innerHTML = "";
-    for (let file of inputEl.files) {
-      if (!file.type.startsWith("image/")) continue;
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      container.appendChild(img);
-      img.onload = () => URL.revokeObjectURL(img.src);
-    }
-  };
+  // Leaflet Map
+  const map = L.map("map").setView([20.5937, 78.9629], 5);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+  }).addTo(map);
 
-  document.getElementById("breakOdoPhoto").addEventListener("change", () => previewImage(document.getElementById("breakOdoPhoto"), "previewBreakOdo"));
-  document.getElementById("repVehicleOdoPhoto").addEventListener("change", () => previewImage(document.getElementById("repVehicleOdoPhoto"), "previewRepOdo"));
+  let marker;
+  map.on("click", (e) => {
+    if (marker) marker.setLatLng(e.latlng);
+    else marker = L.marker(e.latlng).addTo(map);
+    document.getElementById("lat").value = e.latlng.lat;
+    document.getElementById("lng").value = e.latlng.lng;
+  });
 
-  // Map
-  const map = L.map('map').setView([20.5937, 78.9629], 5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  // Helper to convert image file to base64
+  const readFileAsBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
-  let marker = null;
-  const setMarker = (latlng) => {
-    if (marker) marker.setLatLng(latlng);
-    else {
-      marker = L.marker(latlng, { draggable: true }).addTo(map);
-      marker.on('dragend', e => {
-        const p = e.target.getLatLng();
-        document.getElementById('lat').value = p.lat;
-        document.getElementById('lng').value = p.lng;
-      });
-    }
-    document.getElementById('lat').value = latlng.lat;
-    document.getElementById('lng').value = latlng.lng;
-    map.panTo(latlng);
-  };
-
-  map.on('click', e => setMarker(e.latlng));
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      setMarker({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
-    }, err => console.warn("Geolocation failed"));
-  }
-
+  // Form submit handler
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (marker) {
-      const p = marker.getLatLng();
-      document.getElementById('lat').value = p.lat;
-      document.getElementById('lng').value = p.lng;
-    }
 
-    const formData = {
-      formType: "vehicleBreakdown",
+    const data = {
       timestamp: document.getElementById("timestamp").value,
       timeExchange: document.getElementById("timeExchange").value,
       repName: document.getElementById("repName").value,
@@ -68,37 +43,30 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: document.getElementById("lng").value,
       problem: document.getElementById("problem").value,
       repVehicleReg: document.getElementById("repVehicleReg").value,
-      repVehicleOdo: document.getElementById("repVehicleOdo").value
+      repVehicleOdo: document.getElementById("repVehicleOdo").value,
     };
 
-    const readFileAsBase64 = file => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = err => reject(err);
-      reader.readAsDataURL(file);
-    });
+    const breakOdoPhoto = document.getElementById("breakOdoPhoto").files[0];
+    const repVehicleOdoPhoto = document.getElementById("repVehicleOdoPhoto").files[0];
 
-    if (document.getElementById("breakOdoPhoto").files[0])
-      formData.breakOdoPhoto = await readFileAsBase64(document.getElementById("breakOdoPhoto").files[0]);
-    if (document.getElementById("repVehicleOdoPhoto").files[0])
-      formData.repVehicleOdoPhoto = await readFileAsBase64(document.getElementById("repVehicleOdoPhoto").files[0]);
+    if (breakOdoPhoto) data.breakOdoPhoto = await readFileAsBase64(breakOdoPhoto);
+    if (repVehicleOdoPhoto) data.repVehicleOdoPhoto = await readFileAsBase64(repVehicleOdoPhoto);
 
     try {
       const res = await fetch(WEB_APP_URL, {
         method: "POST",
-        headers: { "Content-Type": "Text/plain" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "text/plain" },
       });
-      const data = await res.json();
-      if (data.status === "success") {
-        alert("✅ Vehicle breakdown data saved!");
+      const result = await res.json();
+      if (result.status === "success") {
+        output.textContent = "✅ Data submitted successfully!";
         form.reset();
-        document.getElementById("previewBreakOdo").innerHTML = "";
-        document.getElementById("previewRepOdo").innerHTML = "";
-        if (marker) { map.removeLayer(marker); marker = null; }
-      } else alert("❌ Submission error: " + data.message);
+      } else {
+        output.textContent = "❌ Error: " + result.message;
+      }
     } catch (err) {
-      alert("⚠️ Submission failed: " + err.message);
+      output.textContent = "⚠️ Failed: " + err.message;
     }
   });
 });
